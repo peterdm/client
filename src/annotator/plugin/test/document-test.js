@@ -64,11 +64,11 @@ describe('DocumentMeta', function () {
         <meta name="citation_title" content="Foo">
         <meta name="citation_pdf_url" content="foo.pdf">
         <meta name="dc.identifier" content="doi:10.1175/JCLI-D-11-00015.1">
-        <meta name="dc:identifier" content="foobar-abcxyz">
+        <meta name="dc:Identifier" content="foobar-abcxyz">
         <meta name="dc.relation.ispartof" content="isbn:123456789">
         <meta name="DC.type" content="Article">
         <meta property="og:url" content="http://example.com">
-        <meta name="twitter:site" content="@okfn">
+        <meta name="twitter:Site" content="@okfn">
         <link rel="icon" href="http://example.com/images/icon.ico"></link>
         <meta name="eprints.title" content="Computer Lib / Dream Machines">
         <meta name="prism.title" content="Literary Machines">

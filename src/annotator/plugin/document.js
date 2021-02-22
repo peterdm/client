@@ -177,10 +177,10 @@ export default class DocumentMeta extends Delegator {
     /** @type {Object.<string,string[]>} */
     const tags = {};
     for (let meta of Array.from(this.document.querySelectorAll('meta'))) {
-      const name = meta.getAttribute(attribute);
+      const name = meta.getAttribute(attribute)?.toLowerCase();
       const { content } = meta;
       if (name) {
-        const match = name.match(RegExp(`^${prefix}${delimiter}(.+)$`, 'i'));
+        const match = name.match(RegExp(`^${prefix}${delimiter}(.+)$`));
         if (match) {
           const n = match[1];
           if (tags[n]) {
