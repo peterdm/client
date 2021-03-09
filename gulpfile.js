@@ -352,6 +352,11 @@ function runKarma(done) {
     },
     done
   ).start();
+
+  process.on('SIGINT', () => {
+    done();
+    process.exit();
+  });
 }
 
 // Unit and integration testing tasks.
