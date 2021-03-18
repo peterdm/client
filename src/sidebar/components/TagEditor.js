@@ -91,7 +91,7 @@ function TagEditor({
       setSuggestionsListOpen(false);
     } else {
       // Call filter() with a query value to return all matching suggestions.
-      const suggestions = tagsService.filter(pendingTag());
+      const suggestions = tagsService.filter({ text: pendingTag() });
       // Remove any repeated suggestions that are already tags
       // and set those to state.
       setSuggestions(removeDuplicates(suggestions, tagList));

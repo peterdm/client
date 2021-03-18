@@ -158,7 +158,7 @@ describe('TagEditor', function () {
     wrapper.find('input').instance().value = 'tag3';
     typeInput(wrapper);
     assert.isTrue(fakeTagsService.filter.calledOnce);
-    assert.isTrue(fakeTagsService.filter.calledWith('tag3'));
+    assert.isTrue(fakeTagsService.filter.calledWith({ text: 'tag3' }));
   });
 
   describe('suggestions open / close', () => {

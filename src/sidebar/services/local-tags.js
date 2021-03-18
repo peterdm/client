@@ -1,4 +1,5 @@
 /** @typedef {import('./tags').Tag} Tag */
+/** @typedef {import('./tags').TagQuery} TagQuery */
 
 /**
  * Service for fetching tag suggestions and storing data to generate them.
@@ -15,7 +16,7 @@ export default function localTags(localStorage) {
   /**
    * Return a list of tag suggestions matching `query`.
    *
-   * @param {string} query
+   * @param {TagQuery} query
    * @param {number|null} limit - Optional limit of the results.
    * @return {Tag[]} List of matching tags
    */
@@ -28,7 +29,7 @@ export default function localTags(localStorage) {
     //   (e.g. tag "pink banana" matches query "ban"), OR
     // * tag has substring query occurring after a non-word character
     //   (e.g. tag "pink!banana" matches query "ban")
-    let regex = new RegExp('(\\W|\\b)' + query, 'i');
+    let regex = new RegExp('(\\W|\\b)' + query.text, 'i');
     return savedTags.filter(tag => {
       if (tag.match(regex)) {
         if (limit === null || resultCount < limit) {

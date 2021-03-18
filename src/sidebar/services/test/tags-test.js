@@ -32,7 +32,13 @@ describe('sidebar/services/tags', () => {
 
   describe('#filter', () => {
     it('delegates query call to tag-provider', () => {
-      let query = 'pourquoi';
+      let query = { text: 'pourquoi' };
+      tags.filter(query);
+      return assert.calledWith(fakeTagProvider.filter, query);
+    });
+
+    it('delegates query call to tag-provider with sample context', () => {
+      let query = { text: 'pourquoi', context: { lang: 'fr' } };
       tags.filter(query);
       return assert.calledWith(fakeTagProvider.filter, query);
     });

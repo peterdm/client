@@ -6,8 +6,14 @@
  */
 
 /**
+ * @typedef TagQuery
+ * @property {string} text - The text entered in the tag editor
+ * @property {object|null} context - Optional context object.
+ */
+
+/**
  * Service for fetching tag suggestions from a tagProvider service
- * and storing data for future suggestions.
+ * and optionally storing data to generate them.
  *
  * The injected `tagProvider` service needs to provide `filter` method to
  * fetch tag suggestions matching a query and optional context object.
@@ -20,7 +26,7 @@ export default function tags(tagProvider, tagStore) {
   /**
    * Return a list of tag suggestions matching `query`.
    *
-   * @param {string} query
+   * @param {TagQuery} query
    * @param {number|null} limit - Optional limit of the results.
    * @return {Tag[]} List of matching tags
    */

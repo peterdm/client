@@ -67,21 +67,29 @@ describe('sidebar/services/tag-provider', () => {
 
   describe('#filter', () => {
     it('returns tags that start with the query string', () => {
-      assert.deepEqual(tags.filter('b'), ['bar', 'bar argon', 'banana']);
+      assert.deepEqual(tags.filter({ text: 'b' }), [
+        'bar',
+        'bar argon',
+        'banana',
+      ]);
     });
 
     it('returns tags that have any word starting with the query string', () => {
-      assert.deepEqual(tags.filter('ar'), ['bar argon', 'argon']);
+      assert.deepEqual(tags.filter({ text: 'ar' }), ['bar argon', 'argon']);
     });
 
     it('is case insensitive', () => {
-      assert.deepEqual(tags.filter('Ar'), ['bar argon', 'argon']);
+      assert.deepEqual(tags.filter({ text: 'Ar' }), ['bar argon', 'argon']);
     });
 
     it('limits tags when provided a limit value', () => {
-      assert.deepEqual(tags.filter('b', 1), ['bar']);
-      assert.deepEqual(tags.filter('b', 2), ['bar', 'bar argon']);
-      assert.deepEqual(tags.filter('b', 3), ['bar', 'bar argon', 'banana']);
+      assert.deepEqual(tags.filter({ text: 'b' }, 1), ['bar']);
+      assert.deepEqual(tags.filter({ text: 'b' }, 2), ['bar', 'bar argon']);
+      assert.deepEqual(tags.filter({ text: 'b' }, 3), [
+        'bar',
+        'bar argon',
+        'banana',
+      ]);
     });
   });
 });
