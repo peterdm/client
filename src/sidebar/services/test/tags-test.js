@@ -12,17 +12,17 @@ describe('sidebar/services/tags', () => {
     sandbox = sinon.createSandbox();
 
     fakeTagProvider = {
-      filter: sinon.stub()
+      filter: sinon.stub(),
     };
 
     fakeTagStore = {
-      store: sinon.stub()
+      store: sinon.stub(),
     };
 
     tags = new Injector()
       .register('tagProvider', { value: fakeTagProvider })
       .register('tagStore', { value: fakeTagStore })
-      .register( 'tags', tagsFactory)
+      .register('tags', tagsFactory)
       .get('tags');
   });
 

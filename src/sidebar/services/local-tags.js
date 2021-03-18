@@ -1,6 +1,5 @@
 /** @typedef {import('./tags').Tag} Tag */
 
-
 /**
  * Service for fetching tag suggestions and storing data to generate them.
  *
