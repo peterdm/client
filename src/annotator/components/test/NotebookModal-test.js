@@ -58,6 +58,9 @@ describe('NotebookModal', () => {
     );
   });
 
+  // Test disabled temporarily until a sync mechanism is implemented in the
+  // notebook to fetch new annotations.
+  /*
   it('creates a new iframe element if the group is changed', () => {
     const wrapper = createComponent();
 
@@ -90,6 +93,7 @@ describe('NotebookModal', () => {
     );
     assert.notEqual(iframe1.getDOMNode(), iframe3.getDOMNode());
   });
+  */
 
   it('makes the document unscrollable on openNotebook event', () => {
     createComponent();

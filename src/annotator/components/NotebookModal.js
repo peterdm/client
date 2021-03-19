@@ -48,6 +48,10 @@ function NotebookIframe({ config, groupId }) {
  * @param {NotebookModalProps} props
  */
 export default function NotebookModal({ eventBus, config }) {
+  // Temporal solution: while there is no mechanism to sync new annotations in
+  // the notebook, we force re-rendering of the iframe on every 'openNotebook'
+  // event so we fetch the new annotations.
+  const [iframeKey, setIframeKey] = useState(Math.random());
   const [isHidden, setIsHidden] = useState(true);
   const [groupId, setGroupId] = useState(/** @type {string|null} */ (null));
   const originalDocumentOverflowStyle = useRef('');
@@ -81,6 +85,7 @@ export default function NotebookModal({ eventBus, config }) {
       /** @type {string} */ groupId
     ) => {
       setIsHidden(false);
+      setIframeKey(Math.random());
       setGroupId(groupId);
     });
 
@@ -105,7 +110,7 @@ export default function NotebookModal({ eventBus, config }) {
           onClick={onClose}
         />
         {groupId !== null && (
-          <NotebookIframe config={config} groupId={groupId} />
+          <NotebookIframe key={iframeKey} config={config} groupId={groupId} />
         )}
       </div>
     </div>
