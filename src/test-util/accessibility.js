@@ -72,7 +72,7 @@ export function checkAccessibility(scenarios) {
         );
       }
 
-      const elementOrWrapper = content();
+      const elementOrWrapper = await content();
 
       if (
         !(elementOrWrapper instanceof ReactWrapper) &&

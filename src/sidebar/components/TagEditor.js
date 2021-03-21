@@ -10,6 +10,7 @@ import { withServices } from '../service-context';
 import AutocompleteList from './AutocompleteList';
 
 /** @typedef {import("preact").JSX.Element} JSXElement */
+/** @typedef {import("../services/tags").Tag} Tag */
 
 // Global counter used to create a unique id for each instance of a TagEditor
 let tagEditorIdCounter = 0;
@@ -19,6 +20,7 @@ let tagEditorIdCounter = 0;
  * @prop {(tag: string) => boolean} onAddTag - Callback to add a tag to the annotation
  * @prop {(tag: string) => boolean} onRemoveTag - Callback to remove a tag from the annotation
  * @prop {(tag: string) => any} onTagInput - Callback when inputted tag text changes
+ * @prop {(tags: Tag[]) => any} onTagSuggestions - Callback when suggestions returned
  * @prop {string[]} tagList - The list of tags for the annotation under edit
  * @prop {Object} tags - Injected service
  */
@@ -35,6 +37,7 @@ function TagEditor({
   onAddTag,
   onRemoveTag,
   onTagInput,
+  onTagSuggestions,
   tagList,
   tags: tagsService,
 }) {
@@ -85,18 +88,21 @@ function TagEditor({
    * Get a list of suggestions returned from the tagsService
    * reset the activeItem and open the AutocompleteList
    */
-  const updateSuggestions = () => {
+  const updateSuggestions = async () => {
+    let uniqueSuggestions = [];
     if (!hasPendingTag()) {
       // If there is no input, just hide the suggestions
       setSuggestionsListOpen(false);
     } else {
       // Call filter() with a query value to return all matching suggestions.
-      const suggestions = tagsService.filter({ text: pendingTag() });
+      const suggestions = await tagsService.filter({ text: pendingTag() });
       // Remove any repeated suggestions that are already tags
       // and set those to state.
-      setSuggestions(removeDuplicates(suggestions, tagList));
-      setSuggestionsListOpen(suggestions.length > 0);
+      const uniqueSuggestions = removeDuplicates(suggestions, tagList);
+      setSuggestions(uniqueSuggestions);
+      setSuggestionsListOpen(uniqueSuggestions.length > 0);
     }
+    onTagSuggestions?.(uniqueSuggestions);
     setActiveItem(-1);
   };
 
@@ -116,9 +122,9 @@ function TagEditor({
     }
   };
 
-  const handleOnInput = () => {
+  const handleOnInput = async () => {
     onTagInput?.(pendingTag());
-    updateSuggestions();
+    return updateSuggestions();
   };
 
   /**

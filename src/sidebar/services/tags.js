@@ -26,11 +26,12 @@ export default function tags(tagProvider, tagStore) {
   /**
    * Return a list of tag suggestions matching `query`.
    *
+   * @async
    * @param {TagQuery} query
    * @param {number|null} limit - Optional limit of the results.
-   * @return {Tag[]} List of matching tags
+   * @return {Promise<Tag[]>} List of matching tags
    */
-  function filter(query, limit = null) {
+  async function filter(query, limit = null) {
     return tagProvider.filter(query, limit);
   }
 
@@ -38,9 +39,11 @@ export default function tags(tagProvider, tagStore) {
    * Update the list of stored tag suggestions based on the tags that a user has
    * entered for a given annotation.
    *
+   * @async
    * @param {Tag[]} tags - List of tags.
+   * @return {Promise}
    */
-  function store(tags) {
+  async function store(tags) {
     return tagStore.store(tags);
   }
 

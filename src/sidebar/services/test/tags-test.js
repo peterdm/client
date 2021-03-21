@@ -31,23 +31,23 @@ describe('sidebar/services/tags', () => {
   });
 
   describe('#filter', () => {
-    it('delegates query call to tag-provider', () => {
+    it('delegates query call to tag-provider', async () => {
       let query = { text: 'pourquoi' };
-      tags.filter(query);
+      await tags.filter(query);
       return assert.calledWith(fakeTagProvider.filter, query);
     });
 
-    it('delegates query call to tag-provider with sample context', () => {
+    it('delegates query call to tag-provider with sample context', async () => {
       let query = { text: 'pourquoi', context: { lang: 'fr' } };
-      tags.filter(query);
+      await tags.filter(query);
       return assert.calledWith(fakeTagProvider.filter, query);
     });
   });
 
   describe('#store', () => {
-    it('delegates store call to tag-store', () => {
+    it('delegates store call to tag-store', async () => {
       let theTags = [{ text: 'parce que' }];
-      tags.store(theTags);
+      await tags.store(theTags);
       return assert.calledWith(fakeTagStore.store, theTags);
     });
   });

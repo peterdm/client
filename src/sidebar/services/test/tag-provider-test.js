@@ -66,30 +66,29 @@ describe('sidebar/services/tag-provider', () => {
   });
 
   describe('#filter', () => {
-    it('returns tags that start with the query string', () => {
-      assert.deepEqual(tags.filter({ text: 'b' }), [
-        'bar',
-        'bar argon',
-        'banana',
-      ]);
+    it('returns tags that start with the query string', async () => {
+      let suggestions = await tags.filter({ text: 'b' });
+      assert.deepEqual(suggestions, ['bar', 'bar argon', 'banana']);
     });
 
-    it('returns tags that have any word starting with the query string', () => {
-      assert.deepEqual(tags.filter({ text: 'ar' }), ['bar argon', 'argon']);
+    it('returns tags that have any word starting with the query string', async () => {
+      let suggestions = await tags.filter({ text: 'ar' });
+      assert.deepEqual(suggestions, ['bar argon', 'argon']);
     });
 
-    it('is case insensitive', () => {
-      assert.deepEqual(tags.filter({ text: 'Ar' }), ['bar argon', 'argon']);
+    it('is case insensitive', async () => {
+      let suggestions = await tags.filter({ text: 'Ar' });
+      assert.deepEqual(suggestions, ['bar argon', 'argon']);
     });
 
-    it('limits tags when provided a limit value', () => {
-      assert.deepEqual(tags.filter({ text: 'b' }, 1), ['bar']);
-      assert.deepEqual(tags.filter({ text: 'b' }, 2), ['bar', 'bar argon']);
-      assert.deepEqual(tags.filter({ text: 'b' }, 3), [
-        'bar',
-        'bar argon',
-        'banana',
-      ]);
+    it('limits tags when provided a limit value', async () => {
+      let one = await tags.filter({ text: 'b' }, 1);
+      let two = await tags.filter({ text: 'b' }, 2);
+      let tre = await tags.filter({ text: 'b' }, 3);
+
+      assert.deepEqual(one, ['bar']);
+      assert.deepEqual(two, ['bar', 'bar argon']);
+      assert.deepEqual(tre, ['bar', 'bar argon', 'banana']);
     });
   });
 });

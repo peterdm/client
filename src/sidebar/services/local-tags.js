@@ -16,11 +16,12 @@ export default function localTags(localStorage) {
   /**
    * Return a list of tag suggestions matching `query`.
    *
+   * @async
    * @param {TagQuery} query
    * @param {number|null} limit - Optional limit of the results.
-   * @return {Tag[]} List of matching tags
+   * @return {Promise<Tag[]>} List of matching tags
    */
-  function filter(query, limit = null) {
+  async function filter(query, limit = null) {
     const savedTags = localStorage.getObject(TAGS_LIST_KEY) || [];
     let resultCount = 0;
     // query will match tag if:
@@ -30,7 +31,7 @@ export default function localTags(localStorage) {
     // * tag has substring query occurring after a non-word character
     //   (e.g. tag "pink!banana" matches query "ban")
     let regex = new RegExp('(\\W|\\b)' + query.text, 'i');
-    return savedTags.filter(tag => {
+    let suggestions = savedTags.filter(tag => {
       if (tag.match(regex)) {
         if (limit === null || resultCount < limit) {
           // limit allows a subset of the results
@@ -41,15 +42,19 @@ export default function localTags(localStorage) {
       }
       return false;
     });
+
+    return Promise.resolve(suggestions);
   }
 
   /**
    * Update the list of stored tag suggestions based on the tags that a user has
    * entered for a given annotation.
    *
+   * @async
    * @param {Tag[]} tags - List of tags.
+   * @return {Promise}
    */
-  function store(tags) {
+  async function store(tags) {
     // Update the stored (tag, frequency) map.
     const savedTags = localStorage.getObject(TAGS_MAP_KEY) || {};
     tags.forEach(tag => {
@@ -74,6 +79,8 @@ export default function localTags(localStorage) {
       return t1.localeCompare(t2);
     });
     localStorage.setObject(TAGS_LIST_KEY, tagsList);
+
+    return Promise.resolve();
   }
 
   return {

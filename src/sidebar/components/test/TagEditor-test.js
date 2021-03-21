@@ -7,6 +7,7 @@ import { $imports } from '../TagEditor';
 
 import { checkAccessibility } from '../../../test-util/accessibility';
 import mockImportedComponents from '../../../test-util/mock-imported-components';
+import { waitFor } from '../../../test-util/wait';
 
 describe('TagEditor', function () {
   let containers = [];
@@ -16,6 +17,7 @@ describe('TagEditor', function () {
   let fakeOnAddTag;
   let fakeOnRemoveTag;
   let fakeOnTagInput;
+  let fakeOnTagSuggestions;
 
   function createComponent(props) {
     // Use an array of containers so we can test more
@@ -29,6 +31,7 @@ describe('TagEditor', function () {
         onAddTag={fakeOnAddTag}
         onRemoveTag={fakeOnRemoveTag}
         onTagInput={fakeOnTagInput}
+        onTagSuggestions={fakeOnTagSuggestions}
         tagList={fakeTags}
         // service props
         serviceUrl={fakeServiceUrl}
@@ -45,8 +48,9 @@ describe('TagEditor', function () {
     fakeOnTagInput = sinon.stub();
     fakeServiceUrl = sinon.stub().returns('http://serviceurl.com');
     fakeTagsService = {
-      filter: sinon.stub().returns(['tag4', 'tag3']),
+      filter: sinon.stub().resolves(['tag4', 'tag3']),
     };
+    fakeOnTagSuggestions = sinon.stub();
     $imports.$mock(mockImportedComponents());
   });
 
@@ -85,6 +89,12 @@ describe('TagEditor', function () {
   function typeInput(wrapper) {
     wrapper.find('input').simulate('input', { inputType: 'insertText' });
   }
+  async function typeInputAndAwaitResponse(wrapper) {
+    const inputWrapper = typeInput(wrapper);
+    await waitFor(() => fakeOnTagSuggestions.called);
+    wrapper.update();
+    return inputWrapper;
+  }
 
   it('adds appropriate tag values to the elements', () => {
     const wrapper = createComponent();
@@ -95,19 +105,19 @@ describe('TagEditor', function () {
     });
   });
 
-  it('generates an ordered AutocompleteList containing the array values returned from filter()', () => {
+  it('generates an ordered AutocompleteList containing the array values returned from filter()', async () => {
     const wrapper = createComponent();
     wrapper.find('input').instance().value = 'non-empty';
-    typeInput(wrapper);
+    await typeInputAndAwaitResponse(wrapper);
     assert.equal(wrapper.find('AutocompleteList').prop('list')[0], 'tag3');
     assert.equal(wrapper.find('AutocompleteList').prop('list')[1], 'tag4');
   });
 
-  it('shows case-insensitive matches to suggested tags', () => {
-    fakeTagsService.filter.returns(['fine AArdvark', 'AAArgh']);
+  it('shows case-insensitive matches to suggested tags', async () => {
+    fakeTagsService.filter.resolves(['fine AArdvark', 'AAArgh']);
     const wrapper = createComponent();
     wrapper.find('input').instance().value = 'aa';
-    typeInput(wrapper);
+    await typeInputAndAwaitResponse(wrapper);
 
     const formattingFn = wrapper.find('AutocompleteList').prop('listFormatter');
     const tagList = wrapper.find('AutocompleteList').prop('list');
@@ -125,7 +135,7 @@ describe('TagEditor', function () {
     assert.equal(secondSuggestedTag, 'fine AArdvark');
   });
 
-  it('shows suggested tags as-is if they do not seem to match the input', () => {
+  it('shows suggested tags as-is if they do not seem to match the input', async () => {
     // This case addresses a situation in which a substring match isn't found
     // for the current input text against a given suggested tag. This should not
     // happen in practice—i.e. filtered tags should match the current input—
@@ -133,10 +143,10 @@ describe('TagEditor', function () {
     // "matching" as the component, so we should be able to handle cases where
     // there doesn't "seem" to be a match by just rendering the suggested tag
     // as-is.
-    fakeTagsService.filter.returns(['fine AArdvark', 'AAArgh']);
+    fakeTagsService.filter.resolves(['fine AArdvark', 'AAArgh']);
     const wrapper = createComponent();
     wrapper.find('input').instance().value = 'bb';
-    typeInput(wrapper);
+    await typeInputAndAwaitResponse(wrapper);
 
     const formattingFn = wrapper.find('AutocompleteList').prop('listFormatter');
     const tagList = wrapper.find('AutocompleteList').prop('list');
@@ -153,29 +163,29 @@ describe('TagEditor', function () {
     assert.equal(secondSuggestedTag, 'fine AArdvark');
   });
 
-  it('passes the text value to filter() after receiving input', () => {
+  it('passes the text value to filter() after receiving input', async () => {
     const wrapper = createComponent();
     wrapper.find('input').instance().value = 'tag3';
-    typeInput(wrapper);
+    await typeInputAndAwaitResponse(wrapper);
     assert.isTrue(fakeTagsService.filter.calledOnce);
     assert.isTrue(fakeTagsService.filter.calledWith({ text: 'tag3' }));
   });
 
   describe('suggestions open / close', () => {
-    it('closes the suggestions when selecting a tag from AutocompleteList', () => {
+    it('closes the suggestions when selecting a tag from AutocompleteList', async () => {
       const wrapper = createComponent();
       wrapper.find('input').instance().value = 'non-empty'; // to open list
-      typeInput(wrapper);
+      await typeInputAndAwaitResponse(wrapper);
       assert.equal(wrapper.find('AutocompleteList').prop('open'), true);
       selectOption(wrapper, 'tag4');
       wrapper.update();
       assert.equal(wrapper.find('AutocompleteList').prop('open'), false);
     });
 
-    it('closes the suggestions when deleting <input> value', () => {
+    it('closes the suggestions when deleting <input> value', async () => {
       const wrapper = createComponent();
       wrapper.find('input').instance().value = 'tag3';
-      typeInput(wrapper);
+      await typeInputAndAwaitResponse(wrapper);
       assert.equal(wrapper.find('AutocompleteList').prop('list').length, 2);
       wrapper.update();
       assert.equal(wrapper.find('AutocompleteList').prop('open'), true);
@@ -186,10 +196,10 @@ describe('TagEditor', function () {
       assert.equal(wrapper.find('AutocompleteList').prop('open'), false);
     });
 
-    it('does not close the suggestions when deleting only part of the <input> value', () => {
+    it('does not close the suggestions when deleting only part of the <input> value', async () => {
       const wrapper = createComponent();
       wrapper.find('input').instance().value = 'tag3';
-      typeInput(wrapper);
+      await typeInputAndAwaitResponse(wrapper);
       assert.equal(wrapper.find('AutocompleteList').prop('list').length, 2);
       assert.equal(wrapper.find('AutocompleteList').prop('open'), true);
       wrapper.find('input').instance().value = 't'; // non-empty input remains
@@ -220,17 +230,17 @@ describe('TagEditor', function () {
       assert.equal(wrapper.find('AutocompleteList').prop('open'), false);
     });
 
-    it('closes the suggestions when focus is removed from the <input> field', () => {
+    it('closes the suggestions when focus is removed from the <input> field', async () => {
       const wrapper = createComponent();
       wrapper.find('input').instance().value = 'non-empty';
-      typeInput(wrapper);
+      await typeInputAndAwaitResponse(wrapper);
       assert.equal(wrapper.find('AutocompleteList').prop('open'), true);
       document.body.dispatchEvent(new Event('focus'));
       wrapper.update();
       assert.equal(wrapper.find('AutocompleteList').prop('open'), false);
     });
 
-    it('does not render duplicate suggestions', () => {
+    it('does not render duplicate suggestions', async () => {
       // `tag3` supplied in the `tagList` will be a duplicate value relative
       // with the fakeTagsService.filter result above.
       const wrapper = createComponent({
@@ -238,7 +248,7 @@ describe('TagEditor', function () {
         tagList: ['tag1', 'tag2', 'tag3'],
       });
       wrapper.find('input').instance().value = 'non-empty';
-      typeInput(wrapper);
+      await typeInputAndAwaitResponse(wrapper);
       assert.deepEqual(wrapper.find('AutocompleteList').prop('list'), ['tag4']);
     });
   });
@@ -277,10 +287,10 @@ describe('TagEditor', function () {
       [selectOptionViaDelimiter, ','],
       [selectOptionViaTab, 'Tab'],
     ].forEach(keyAction => {
-      it(`adds a tag from the <input> field when typing "${keyAction[1]}"`, () => {
+      it(`adds a tag from the <input> field when typing "${keyAction[1]}"`, async () => {
         const wrapper = createComponent();
         wrapper.find('input').instance().value = 'umbrella';
-        typeInput(wrapper); // opens suggestion list
+        await typeInputAndAwaitResponse(wrapper); // opens suggestion list
         keyAction[0](wrapper);
         assertAddTagsSuccess(wrapper, 'umbrella');
         // The onTagInput callback will have been called twice: once when text
@@ -298,10 +308,10 @@ describe('TagEditor', function () {
       [selectOptionViaDelimiter, ','],
       [selectOptionViaTab, 'Tab'],
     ].forEach(keyAction => {
-      it(`adds a tag from the suggestions list when typing "${keyAction[1]}"`, () => {
+      it(`adds a tag from the suggestions list when typing "${keyAction[1]}"`, async () => {
         const wrapper = createComponent();
         wrapper.find('input').instance().value = 't';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         // suggestions: [tag3, tag4]
         navigateDown(wrapper);
         keyAction[0](wrapper);
@@ -312,15 +322,15 @@ describe('TagEditor', function () {
     });
 
     context('When using the "Escape" key', () => {
-      it('should clear tag text in <input> but retain focus', () => {
+      it('should clear tag text in <input> but retain focus', async () => {
         const wrapper = createComponent();
         // Add and commit a tag
         wrapper.find('input').instance().value = 'thankyou';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         wrapper.find('input').simulate('keydown', { key: 'Tab' });
         // Type more text
         wrapper.find('input').instance().value = 'food';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         // // Now press escape
         wrapper.find('input').simulate('keydown', { key: 'Escape' });
         assert.equal(wrapper.find('input').instance().value, '');
@@ -346,33 +356,33 @@ describe('TagEditor', function () {
     });
 
     context('Using the "Tab" key', () => {
-      it('should add the tag as typed when there are no suggestions', () => {
+      it('should add the tag as typed when there are no suggestions', async () => {
         const wrapper = createComponent();
-        fakeTagsService.filter.returns([]);
+        fakeTagsService.filter.resolves([]);
         wrapper.find('input').instance().value = 'tag33';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         selectOptionViaTab(wrapper);
         assertAddTagsSuccess(wrapper, 'tag33');
         // ensure focus is still on the input field
         assert.equal(document.activeElement.nodeName, 'INPUT');
       });
 
-      it('should add the tag as typed when there are multiple suggestions', () => {
+      it('should add the tag as typed when there are multiple suggestions', async () => {
         const wrapper = createComponent();
-        fakeTagsService.filter.returns([]);
+        fakeTagsService.filter.resolves([]);
         wrapper.find('input').instance().value = 't';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         selectOptionViaTab(wrapper);
         assertAddTagsSuccess(wrapper, 't');
         // ensure focus is still on the input field
         assert.equal(document.activeElement.nodeName, 'INPUT');
       });
 
-      it('should add the suggested tag when there is exactly one suggestion', () => {
+      it('should add the suggested tag when there is exactly one suggestion', async () => {
         const wrapper = createComponent();
-        fakeTagsService.filter.returns(['tag3']);
+        fakeTagsService.filter.resolves(['tag3']);
         wrapper.find('input').instance().value = 'tag';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         // suggestions: [tag3]
         selectOptionViaTab(wrapper);
         assertAddTagsSuccess(wrapper, 'tag3');
@@ -380,10 +390,10 @@ describe('TagEditor', function () {
         assert.equal(document.activeElement.nodeName, 'INPUT');
       });
 
-      it('should allow navigation out of field when there is no <input> value', () => {
+      it('should allow navigation out of field when there is no <input> value', async () => {
         const wrapper = createComponent();
         wrapper.find('input').instance().value = '';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         selectOptionViaTab(wrapper);
         // Focus has moved
         assert.equal(document.activeElement.nodeName, 'BODY');
@@ -404,18 +414,18 @@ describe('TagEditor', function () {
     });
 
     describe('navigating suggestions via keyboard', () => {
-      it('should set the initial `activeItem` value to -1 when opening suggestions', () => {
+      it('should set the initial `activeItem` value to -1 when opening suggestions', async () => {
         const wrapper = createComponent();
         wrapper.find('input').instance().value = 'non-empty';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         assert.equal(wrapper.find('AutocompleteList').prop('open'), true);
         assert.equal(wrapper.find('AutocompleteList').prop('activeItem'), -1);
       });
 
-      it('should increment the `activeItem` when pressing down circularly', () => {
+      it('should increment the `activeItem` when pressing down circularly', async () => {
         const wrapper = createComponent();
         wrapper.find('input').instance().value = 'non-empty';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         // 2 suggestions: ['tag3', 'tag4'];
         navigateDown(wrapper);
         assert.equal(wrapper.find('AutocompleteList').prop('activeItem'), 0);
@@ -426,10 +436,10 @@ describe('TagEditor', function () {
         assert.equal(wrapper.find('AutocompleteList').prop('activeItem'), -1);
       });
 
-      it('should decrement the `activeItem` when pressing up circularly', () => {
+      it('should decrement the `activeItem` when pressing up circularly', async () => {
         const wrapper = createComponent();
         wrapper.find('input').instance().value = 'non-empty';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         // 2 suggestions: ['tag3', 'tag4'];
         navigateUp(wrapper);
         assert.equal(wrapper.find('AutocompleteList').prop('activeItem'), 1);
@@ -439,16 +449,16 @@ describe('TagEditor', function () {
         assert.equal(wrapper.find('AutocompleteList').prop('activeItem'), -1);
       });
 
-      it('should set `activeItem` to -1 when clearing the suggestions', () => {
+      it('should set `activeItem` to -1 when clearing the suggestions', async () => {
         const wrapper = createComponent();
         wrapper.find('input').instance().value = 'non-empty';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         navigateDown(wrapper);
         // change to non-default value
         assert.equal(wrapper.find('AutocompleteList').prop('activeItem'), 0);
         // clear suggestions
         wrapper.find('input').instance().value = '';
-        typeInput(wrapper);
+        await typeInputAndAwaitResponse(wrapper);
         assert.equal(wrapper.find('AutocompleteList').prop('activeItem'), -1);
       });
     });
@@ -474,10 +484,10 @@ describe('TagEditor', function () {
       );
     });
 
-    it('sets `aria-expanded` value to match open state', () => {
+    it('sets `aria-expanded` value to match open state', async () => {
       const wrapper = createComponent();
       wrapper.find('input').instance().value = 'non-empty'; // to open list
-      typeInput(wrapper);
+      await typeInputAndAwaitResponse(wrapper);
       assert.equal(
         wrapper.find('.TagEditor__combobox-wrapper').prop('aria-expanded'),
         'true'
@@ -490,7 +500,7 @@ describe('TagEditor', function () {
       );
     });
 
-    it('sets the <AutocompleteList> `activeItem` prop to match the selected item index', () => {
+    it('sets the <AutocompleteList> `activeItem` prop to match the selected item index', async () => {
       function checkAttributes(wrapper) {
         const activeDescendant = wrapper
           .find('input')
@@ -507,7 +517,7 @@ describe('TagEditor', function () {
 
       const wrapper = createComponent();
       wrapper.find('input').instance().value = 'non-empty';
-      typeInput(wrapper);
+      await typeInputAndAwaitResponse(wrapper);
       // initial aria-activedescendant value is "" when index is -1
       assert.equal(wrapper.find('input').prop('aria-activedescendant'), '');
       // 2 suggestions: ['tag3', 'tag4'];
@@ -531,19 +541,19 @@ describe('TagEditor', function () {
       checkAccessibility([
         {
           name: 'suggestions open',
-          content: () => {
+          content: async () => {
             const wrapper = createComponent();
             wrapper.find('input').instance().value = 'non-empty';
-            typeInput(wrapper);
+            await typeInputAndAwaitResponse(wrapper);
             return wrapper;
           },
         },
         {
           name: 'suggestions open, first item selected',
-          content: () => {
+          content: async () => {
             const wrapper = createComponent();
             wrapper.find('input').instance().value = 'non-empty';
-            typeInput(wrapper);
+            await typeInputAndAwaitResponse(wrapper);
             navigateDown(wrapper);
             return wrapper;
           },

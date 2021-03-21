@@ -66,8 +66,8 @@ describe('sidebar/services/tag-store', () => {
   });
 
   describe('#store', () => {
-    it('saves new tags to storage', () => {
-      tags.store([{ text: 'new' }]);
+    it('saves new tags to storage', async () => {
+      await tags.store([{ text: 'new' }]);
 
       const storedTagsList = fakeLocalStorage.getObject(TAGS_LIST_KEY);
       assert.include(storedTagsList, 'new');
@@ -83,15 +83,15 @@ describe('sidebar/services/tag-store', () => {
       );
     });
 
-    it('increases the count for a tag already stored', () => {
-      tags.store([{ text: 'bar' }]);
+    it('increases the count for a tag already stored', async () => {
+      await tags.store([{ text: 'bar' }]);
       const storedTagsMap = fakeLocalStorage.getObject(TAGS_MAP_KEY);
       assert.equal(storedTagsMap.bar.count, 6);
     });
 
-    it('orders list by count descending, lexical ascending', () => {
+    it('orders list by count descending, lexical ascending', async () => {
       for (let i = 0; i < 6; i++) {
-        tags.store([{ text: 'foo' }]);
+        await tags.store([{ text: 'foo' }]);
       }
 
       const storedTagsList = fakeLocalStorage.getObject(TAGS_LIST_KEY);
